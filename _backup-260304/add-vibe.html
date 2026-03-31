@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Add a new vibe to your collection - Vibe Tracker" />
+    <meta name="keywords" content="add vibe, new vibe" />
+    <meta name="author" content="Vibe Tracker App" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0f0f0f" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://vibetracker.app/add-vibe" />
+    <meta property="og:title" content="Add Vibe - Vibe Tracker" />
+    <meta property="og:description" content="Add a new vibe to your collection" />
+    <meta property="og:image" content="https://vibetracker.app/og-image.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://vibetracker.app/add-vibe" />
+    <meta property="twitter:title" content="Add Vibe - Vibe Tracker" />
+    <meta property="twitter:description" content="Add a new vibe to your collection" />
+    <meta property="twitter:image" content="https://vibetracker.app/og-image.jpg" />
+
+    <!-- PWA / Apple -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Vibe Tracker" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <title>Add Vibe - Vibe Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* ===== ADD VIBE PAGE ===== */
+
+      /* This page is a scrollable form, not a map — override main-content */
+      .main-content {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 24px;
+        padding: 24px 20px 32px;
+      }
+
+      .page-title {
+        font-family: var(--ff-display);
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-align: center;
+        width: 100%;
+      }
+
+      /* ===== WHEEL ===== */
+      .color-wheel-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+      }
+
+      #vibeWheel {
+        width: 240px;
+        height: 240px;
+        flex-shrink: 0;
+        display: block;
+        overflow: visible;
+      }
+
+      .vibe-seg {
+        cursor: pointer;
+        transition: filter 0.12s;
+      }
+
+      .vibe-seg:hover,
+      .vibe-seg:focus {
+        filter: brightness(1.22) drop-shadow(0 0 4px rgba(255,255,255,0.2));
+        outline: none;
+      }
+
+      .vibe-seg.selected {
+        filter: brightness(1.15);
+        stroke: #fff;
+        stroke-width: 2px;
+        paint-order: stroke fill;
+      }
+
+      /* SVG text inside wheel */
+      .wl-name {
+        font-family: 'Syne', sans-serif;
+        font-weight: 800;
+        font-size: 11px;
+        fill: #e4e4e4;
+        pointer-events: none;
+        letter-spacing: 0.5px;
+      }
+
+      .wl-name.has-selection {
+        fill: #6dff6d;
+      }
+
+      .wl-sub {
+        font-family: 'DM Sans', sans-serif;
+        font-weight: 400;
+        font-size: 8.5px;
+        fill: #555;
+        pointer-events: none;
+      }
+
+      /* Description shown below wheel */
+      .wheel-desc {
+        font-family: var(--ff-body);
+        font-size: 13px;
+        color: var(--text-muted);
+        text-align: center;
+        min-height: 18px;
+        padding: 0 8px;
+        transition: color 0.15s;
+      }
+
+      .wheel-desc.active {
+        color: var(--text);
+      }
+
+      /* ===== PLACE SELECTION ===== */
+      .place-selection {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .place-selection label {
+        font-family: var(--ff-display);
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .place-selection select {
+        width: 100%;
+        padding: 13px 36px 13px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: var(--ff-body);
+        font-size: 15px;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23606060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+
+      .place-selection select:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      .add-vibe-btn {
+        width: 100%;
+        padding: 14px;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        border-radius: 10px;
+        font-family: var(--ff-display);
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.1s;
+        box-shadow: 0 0 24px var(--accent-glow);
+      }
+
+      .add-vibe-btn:hover { opacity: 0.88; }
+      .add-vibe-btn:active { transform: scale(0.98); }
+
+      /* ===== RESPONSIVE ===== */
+      @media (min-width: 768px) {
+        .main-content {
+          padding: 32px 40px 40px;
+          gap: 28px;
+        }
+
+        #vibeWheel {
+          width: 280px;
+          height: 280px;
+        }
+
+        .place-selection {
+          max-width: 400px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        #vibeWheel {
+          width: 210px;
+          height: 210px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <button class="hamburger-menu" aria-label="Open navigation menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <h1 class="logo">Whut's the Vibe?</h1>
+        <div class="top-bar-end" aria-hidden="true"></div>
+      </header>
+
+      <!-- Side Navigation -->
+      <nav class="side-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="vibes.html" class="nav-link">Vibes</a></li>
+          <li><a href="add-vibe.html" class="nav-link active" aria-current="page">Add Vibe</a></li>
+          <li><a href="vibe-check.html" class="nav-link">Vibe Check</a></li>
+          <li><a href="favourites.html" class="nav-link">Favourites</a></li>
+        </ul>
+      </nav>
+
+      <!-- Overlay -->
+      <div class="overlay"></div>
+
+      <!-- Main Content -->
+      <main class="main-content" aria-label="Add new vibe form">
+        <p class="page-title">Add New Vibe</p>
+
+        <!-- Colour Wheel -->
+        <div class="color-wheel-container">
+          <svg
+            id="vibeWheel"
+            viewBox="0 0 260 260"
+            role="listbox"
+            aria-label="Select a vibe"
+          ></svg>
+          <p class="wheel-desc" id="wheelDesc">Hover or tap a segment to pick a vibe</p>
+        </div>
+
+        <!-- Place Selection -->
+        <div class="place-selection">
+          <label for="place-select">Choose a place</label>
+          <select id="place-select" name="place">
+            <option value="">Select a place</option>
+            <option value="central-park-cafe">Central Park Cafe</option>
+            <option value="river-view-restaurant">River View Restaurant</option>
+            <option value="downtown-art-gallery">Downtown Art Gallery</option>
+            <option value="sunset-beach-bar">Sunset Beach Bar</option>
+            <option value="mountain-view-lookout">Mountain View Lookout</option>
+            <option value="cozy-bookstore">Cozy Corner Bookstore</option>
+            <option value="rooftop-lounge">Rooftop Lounge</option>
+            <option value="local-gym">Local Fitness Center</option>
+            <option value="community-park">Community Park</option>
+            <option value="music-venue">Live Music Venue</option>
+          </select>
+          <button class="add-vibe-btn" id="addVibeBtn">Add Vibe</button>
+        </div>
+      </main>
+
+      <!-- Bottom Dock -->
+      <div class="bottom-dock" aria-label="Action buttons">
+        <button class="action-btn" data-action="cancel" aria-label="Cancel">
+          <span class="icon">✖</span>
+          <span class="btn-label">Cancel</span>
+        </button>
+        <button class="action-btn selected" data-action="save" aria-label="Save vibe">
+          <span class="icon">➕</span>
+          <span class="btn-label">Save</span>
+        </button>
+        <button class="action-btn" data-action="photo" aria-label="Add photo">
+          <span class="icon">📷</span>
+          <span class="btn-label">Photo</span>
+        </button>
+      </div>
+
+    </div>
+
+    <script>
+      (function () {
+        'use strict';
+
+        // ── State ──────────────────────────────────────────────────────────
+        let currentVibe  = null;
+        let currentPlace = null;
+
+        // ── DOM ────────────────────────────────────────────────────────────
+        const hamburgerMenu  = document.querySelector('.hamburger-menu');
+        const sideNav        = document.querySelector('.side-nav');
+        const overlay        = document.querySelector('.overlay');
+        const placeSelect    = document.getElementById('place-select');
+        const addVibeBtn     = document.getElementById('addVibeBtn');
+        const actionButtons  = document.querySelectorAll('.action-btn');
+
+        // ── Init ───────────────────────────────────────────────────────────
+        function init() {
+          buildVibeWheel();
+          setupEventListeners();
+          updateActiveNavLink();
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  VIBE WHEEL
+        // ══════════════════════════════════════════════════════════════════
+        function buildVibeWheel() {
+          const svg = document.getElementById('vibeWheel');
+          if (!svg) return;
+
+          const ns = 'http://www.w3.org/2000/svg';
+
+          // Geometry
+          const CX = 130, CY = 130;
+          const R_HOLE      = 46;  // centre circle radius
+          const R_INNER_IN  = 50;  // inner ring: starts here
+          const R_INNER_OUT = 88;  // inner ring: ends here
+          const R_OUTER_IN  = 91;  // outer ring: starts here (3px gap)
+          const R_OUTER_OUT = 125; // outer ring: ends here
+          const GAP         = 1.5; // degrees trimmed from each side of a slice
+
+          // 12 vibes: 6 colours × 2 rings
+          // stops: [centre, inner-mid, outer-mid, outer-edge]
+          const VIBES = [
+            {
+              id: 'red',
+              stops: ['#ffe8e8', '#ffb3b3', '#e83030', '#720000'],
+              inner: { vibe: 'social',     name: 'Social',     desc: 'Easy going energy, good company' },
+              outer: { vibe: 'big-party',  name: 'Party',      desc: 'High energy, all-out celebration' }
+            },
+            {
+              id: 'orange',
+              stops: ['#fff3e8', '#ffcf96', '#e86010', '#952800'],
+              inner: { vibe: 'chat',       name: 'Chat',       desc: 'Relaxed and meaningful conversation' },
+              outer: { vibe: 'serious',    name: 'Serious',    desc: 'Focused, important discussion' }
+            },
+            {
+              id: 'yellow',
+              stops: ['#fffff0', '#fff3a0', '#d4a800', '#6e5200'],
+              inner: { vibe: 'playful',    name: 'Playful',    desc: 'Fun, light and carefree' },
+              outer: { vibe: 'active',     name: 'Active',     desc: 'Energetic and on the move' }
+            },
+            {
+              id: 'green',
+              stops: ['#efffef', '#aaffaa', '#18b818', '#0a520a'],
+              inner: { vibe: 'nature',     name: 'Nature',     desc: 'Calm, grounding, fresh air' },
+              outer: { vibe: 'hectic',     name: 'Hectic',     desc: 'Wild, energetic outdoor adventure' }
+            },
+            {
+              id: 'blue',
+              stops: ['#efefff', '#adadff', '#3838cc', '#0c0c5a'],
+              inner: { vibe: 'chill',      name: 'Chill',      desc: 'Relaxed, no pressure, easy vibes' },
+              outer: { vibe: 'zen',        name: 'Zen',        desc: 'Deep calm and full stress relief' }
+            },
+            {
+              id: 'purple',
+              stops: ['#fceeff', '#dba8ff', '#8818d8', '#380058'],
+              inner: { vibe: 'snacks',     name: 'Snacks',     desc: 'Casual bites and light drinks' },
+              outer: { vibe: 'feast',      name: 'Feast',      desc: 'Full dining and drinking session' }
+            }
+          ];
+
+          // ── Helpers ────────────────────────────────────────────────────
+          function p2c(r, deg) {
+            const rad = (deg - 90) * Math.PI / 180;
+            return { x: CX + r * Math.cos(rad), y: CY + r * Math.sin(rad) };
+          }
+
+          function arcPath(r1, r2, sa, ea) {
+            const A = p2c(r2, sa), B = p2c(r2, ea);
+            const C = p2c(r1, ea), D = p2c(r1, sa);
+            const lg = (ea - sa) > 180 ? 1 : 0;
+            return `M${A.x},${A.y} A${r2},${r2},0,${lg},1,${B.x},${B.y}` +
+                   ` L${C.x},${C.y} A${r1},${r1},0,${lg},0,${D.x},${D.y}Z`;
+          }
+
+          function el(tag, attrs) {
+            const e = document.createElementNS(ns, tag);
+            Object.entries(attrs).forEach(([k, v]) => e.setAttribute(k, v));
+            return e;
+          }
+
+          // ── Defs: one radial gradient per colour ───────────────────────
+          const defs = el('defs', {});
+
+          VIBES.forEach(v => {
+            const g = el('radialGradient', {
+              id: `vg-${v.id}`,
+              cx: CX, cy: CY,
+              r: R_OUTER_OUT,
+              gradientUnits: 'userSpaceOnUse'
+            });
+
+            // Map stop positions onto actual radii so the gradient feels
+            // continuous across both rings: light at the hole edge, dark at outer rim.
+            [
+              ['0%',                                              v.stops[0]],
+              [(R_INNER_IN  / R_OUTER_OUT * 100).toFixed(1)+'%', v.stops[0]],
+              [(R_INNER_OUT / R_OUTER_OUT * 100).toFixed(1)+'%', v.stops[1]],
+              [(R_OUTER_IN  / R_OUTER_OUT * 100).toFixed(1)+'%', v.stops[2]],
+              ['100%',                                            v.stops[3]]
+            ].forEach(([offset, color]) => {
+              const s = el('stop', { offset, 'stop-color': color });
+              g.appendChild(s);
+            });
+
+            defs.appendChild(g);
+          });
+
+          svg.appendChild(defs);
+
+          // ── Segments ───────────────────────────────────────────────────
+          const wheelDesc  = document.getElementById('wheelDesc');
+          let selectedSeg  = null;
+
+          // Label elements (created below, referenced here for hover)
+          let labelName, labelSub;
+
+          VIBES.forEach((v, i) => {
+            const sa = i * 60 + GAP;
+            const ea = (i + 1) * 60 - GAP;
+
+            [
+              { r1: R_INNER_IN, r2: R_INNER_OUT, d: v.inner },
+              { r1: R_OUTER_IN, r2: R_OUTER_OUT, d: v.outer }
+            ].forEach(ring => {
+              const path = el('path', {
+                d:          arcPath(ring.r1, ring.r2, sa, ea),
+                fill:       `url(#vg-${v.id})`,
+                role:       'option',
+                tabindex:   '0',
+                'aria-label': ring.d.name
+              });
+              path.dataset.vibe  = ring.d.vibe;
+              path.dataset.name  = ring.d.name;
+              path.dataset.desc  = ring.d.desc;
+              path.classList.add('vibe-seg');
+
+              function updateCenter(name, sub) {
+                if (labelName) labelName.textContent = name;
+                if (labelSub)  labelSub.textContent  = sub;
+              }
+
+              path.addEventListener('mouseenter', () => {
+                updateCenter(ring.d.name, ring.d.vibe.replace(/-/g,' '));
+                if (wheelDesc) {
+                  wheelDesc.textContent = ring.d.desc;
+                  wheelDesc.classList.add('active');
+                }
+              });
+
+              path.addEventListener('mouseleave', () => {
+                if (selectedSeg) {
+                  updateCenter(selectedSeg.dataset.name, '✓ selected');
+                  if (wheelDesc) {
+                    wheelDesc.textContent = selectedSeg.dataset.desc;
+                    wheelDesc.classList.add('active');
+                  }
+                } else {
+                  updateCenter('Pick', 'a vibe');
+                  if (wheelDesc) {
+                    wheelDesc.textContent = 'Hover or tap a segment to pick a vibe';
+                    wheelDesc.classList.remove('active');
+                  }
+                }
+              });
+
+              function doSelect() {
+                if (selectedSeg) selectedSeg.classList.remove('selected');
+                selectedSeg = path;
+                path.classList.add('selected');
+                currentVibe = ring.d.vibe;
+                updateCenter(ring.d.name, '✓ selected');
+                if (labelName) labelName.classList.add('has-selection');
+                if (wheelDesc) {
+                  wheelDesc.textContent = ring.d.desc;
+                  wheelDesc.classList.add('active');
+                }
+                showNotification('Vibe: ' + ring.d.name);
+              }
+
+              path.addEventListener('click', doSelect);
+              path.addEventListener('touchend', e => { e.preventDefault(); doSelect(); }, { passive: false });
+              path.addEventListener('keydown', e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); doSelect(); }
+              });
+
+              svg.appendChild(path);
+            });
+          });
+
+          // ── Centre circle ──────────────────────────────────────────────
+          svg.appendChild(el('circle', {
+            cx: CX, cy: CY, r: R_HOLE - 2,
+            fill: '#141414', stroke: '#2c2c2c', 'stroke-width': '1.5'
+          }));
+
+          // ── Centre text ────────────────────────────────────────────────
+          labelName = el('text', {
+            x: CX, y: CY - 3,
+            'text-anchor': 'middle',
+            'dominant-baseline': 'auto'
+          });
+          labelName.classList.add('wl-name');
+          labelName.textContent = 'Pick';
+          svg.appendChild(labelName);
+
+          labelSub = el('text', {
+            x: CX, y: CY + 11,
+            'text-anchor': 'middle',
+            'dominant-baseline': 'auto'
+          });
+          labelSub.classList.add('wl-sub');
+          labelSub.textContent = 'a vibe';
+          svg.appendChild(labelSub);
+        }
+
+        // ══════════════════════════════════════════════════════════════════
+        //  NAVIGATION & FORM
+        // ══════════════════════════════════════════════════════════════════
+        function setupEventListeners() {
+          if (hamburgerMenu) hamburgerMenu.addEventListener('click', toggleSideNav);
+          if (overlay)       overlay.addEventListener('click', closeSideNav);
+          if (placeSelect)   placeSelect.addEventListener('change', e => { currentPlace = e.target.value; });
+          if (addVibeBtn)    addVibeBtn.addEventListener('click', handleAddVibeClick);
+
+          actionButtons.forEach(btn => btn.addEventListener('click', handleActionButtonClick));
+          document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && sideNav.classList.contains('active')) closeSideNav();
+          });
+        }
+
+        function toggleSideNav() {
+          sideNav.classList.contains('active') ? closeSideNav() : openSideNav();
+        }
+
+        function openSideNav() {
+          sideNav.classList.add('active');
+          overlay.classList.add('active');
+          hamburgerMenu.classList.add('active');
+          hamburgerMenu.setAttribute('aria-expanded', 'true');
+          document.body.style.overflow = 'hidden';
+        }
+
+        function closeSideNav() {
+          sideNav.classList.remove('active');
+          overlay.classList.remove('active');
+          hamburgerMenu.classList.remove('active');
+          hamburgerMenu.setAttribute('aria-expanded', 'false');
+          document.body.style.overflow = '';
+        }
+
+        function handleAddVibeClick() {
+          if (!currentVibe) { showNotification('Please pick a vibe first!'); return; }
+          if (!currentPlace) { showNotification('Please select a place!'); return; }
+          showNotification('Vibe added!');
+          setTimeout(() => { window.location.href = 'index.html'; }, 1500);
+        }
+
+        function handleActionButtonClick(e) {
+          const action = e.currentTarget.getAttribute('data-action');
+          switch (action) {
+            case 'save':   handleAddVibeClick(); break;
+            case 'cancel':
+              window.history.length > 1 ? window.history.back() : (window.location.href = 'index.html');
+              break;
+            case 'photo':
+              showNotification('Photo feature coming soon!'); break;
+          }
+        }
+
+        function updateActiveNavLink() {
+          const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+          document.querySelectorAll('.nav-link').forEach(link => {
+            link.classList.toggle('active', link.getAttribute('href') === currentPage);
+            if (link.getAttribute('href') === currentPage) {
+              link.setAttribute('aria-current', 'page');
+            } else {
+              link.removeAttribute('aria-current');
+            }
+          });
+        }
+
+        function showNotification(message) {
+          const n = document.createElement('div');
+          n.className = 'notification';
+          n.textContent = message;
+          n.setAttribute('role', 'alert');
+          Object.assign(n.style, {
+            position: 'fixed', top: '50%', left: '50%',
+            transform: 'translate(-50%, -50%)',
+            backgroundColor: '#111', color: '#fff',
+            padding: '12px 24px', borderRadius: '8px',
+            border: '1px solid #333',
+            zIndex: '10000', fontSize: '13px',
+            fontFamily: "'Syne', sans-serif", fontWeight: '600',
+            textAlign: 'center', opacity: '0',
+            transition: 'opacity 0.25s ease',
+          });
+          document.body.appendChild(n);
+          setTimeout(() => { n.style.opacity = '1'; }, 10);
+          setTimeout(() => {
+            n.style.opacity = '0';
+            setTimeout(() => n.parentNode && n.parentNode.removeChild(n), 300);
+          }, 2500);
+        }
+
+        // ── Boot ───────────────────────────────────────────────────────────
+        document.readyState === 'loading'
+          ? document.addEventListener('DOMContentLoaded', init)
+          : init();
+      })();
+    </script>
+  </body>
+</html>

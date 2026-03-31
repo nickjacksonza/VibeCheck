@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="description" content="Add a new vibe to your collection - Vibe Tracker" />
+    <meta name="keywords" content="add vibe, new vibe" />
+    <meta name="author" content="Vibe Tracker App" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0f0f0f" />
+
+    <!-- Open Graph -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://vibetracker.app/add-vibe" />
+    <meta property="og:title" content="Add Vibe - Vibe Tracker" />
+    <meta property="og:description" content="Add a new vibe to your collection" />
+    <meta property="og:image" content="https://vibetracker.app/og-image.jpg" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://vibetracker.app/add-vibe" />
+    <meta property="twitter:title" content="Add Vibe - Vibe Tracker" />
+    <meta property="twitter:description" content="Add a new vibe to your collection" />
+    <meta property="twitter:image" content="https://vibetracker.app/og-image.jpg" />
+
+    <!-- PWA / Apple -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Vibe Tracker" />
+    <meta name="format-detection" content="telephone=no" />
+
+    <title>Add Vibe - Vibe Tracker</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      /* ===== ADD VIBE PAGE ===== */
+
+      /* Override main-content: this page is a scrollable form, not a map */
+      .main-content {
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 28px;
+        padding: 24px 20px;
+      }
+
+      .page-title {
+        font-family: var(--ff-display);
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+        text-align: center;
+        width: 100%;
+      }
+
+      /* ===== COLOR WHEEL ===== */
+      .color-wheel-container {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 14px;
+        width: 100%;
+      }
+
+      .color-wheel {
+        position: relative;
+        width: 240px;
+        height: 240px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #2a2a2a;
+        flex-shrink: 0;
+      }
+
+      .segment {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        transform-origin: center center;
+        cursor: pointer;
+        transition: filter 0.15s;
+      }
+
+      .segment:hover { filter: brightness(1.18); }
+
+      .segment-inner { clip-path: polygon(50% 50%, 50% 25%, 93.3% 37.5%, 50% 50%); }
+      .segment-outer { clip-path: polygon(50% 50%, 50% 0%, 93.3% 25%, 50% 50%); }
+
+      .segment.selected { filter: brightness(1.3) drop-shadow(0 0 6px rgba(57,255,20,0.5)); }
+
+      /* Big Party */
+      .red-inner   { background: radial-gradient(circle at center, #ffb3b3, #ff8a8a); transform: rotate(0deg); }
+      .red-outer   { background: radial-gradient(circle at center, #8b0000, #b22222); transform: rotate(0deg); }
+      /* Serious Topics */
+      .orange-inner { background: radial-gradient(circle at center, #ffd4aa, #ffbd80); transform: rotate(60deg); }
+      .orange-outer { background: radial-gradient(circle at center, #cc4500, #ff6347); transform: rotate(60deg); }
+      /* Play */
+      .yellow-inner { background: radial-gradient(circle at center, #fff4aa, #ffeb80); transform: rotate(120deg); }
+      .yellow-outer { background: radial-gradient(circle at center, #b8860b, #daa520); transform: rotate(120deg); }
+      /* Hectic Nature */
+      .green-inner  { background: radial-gradient(circle at center, #b3ffb3, #8aff8a); transform: rotate(180deg); }
+      .green-outer  { background: radial-gradient(circle at center, #228b22, #32cd32); transform: rotate(180deg); }
+      /* Anti-stress */
+      .blue-inner   { background: radial-gradient(circle at center, #b3b3ff, #8a8aff); transform: rotate(240deg); }
+      .blue-outer   { background: radial-gradient(circle at center, #191970, #4169e1); transform: rotate(240deg); }
+      /* Eat and Drink */
+      .purple-inner { background: radial-gradient(circle at center, #d4b3ff, #c28aff); transform: rotate(300deg); }
+      .purple-outer { background: radial-gradient(circle at center, #4b0082, #8a2be2); transform: rotate(300deg); }
+
+      /* Tooltip: appears as label below the wheel */
+      .vibe-tooltip {
+        font-family: var(--ff-display);
+        font-weight: 700;
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: transparent;
+        height: 18px;
+        text-align: center;
+        transition: color 0.15s;
+        user-select: none;
+      }
+
+      .vibe-tooltip.show { color: var(--accent); }
+
+      /* ===== SELECTED VIBE ===== */
+      .selected-vibe {
+        width: 100%;
+        text-align: center;
+        padding: 14px 16px;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--surface);
+        display: none;
+      }
+
+      .selected-vibe.show { display: block; }
+
+      .selected-vibe-name {
+        font-family: var(--ff-display);
+        font-weight: 700;
+        font-size: 16px;
+        color: var(--accent);
+        margin-bottom: 4px;
+      }
+
+      .selected-vibe-description {
+        font-size: 13px;
+        color: var(--text-muted);
+      }
+
+      /* ===== PLACE SELECTION ===== */
+      .place-selection {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .place-selection label {
+        font-family: var(--ff-display);
+        font-weight: 700;
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .place-selection select {
+        width: 100%;
+        padding: 13px 36px 13px 14px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        color: var(--text);
+        font-family: var(--ff-body);
+        font-size: 15px;
+        appearance: none;
+        -webkit-appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23606060' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        cursor: pointer;
+        transition: border-color 0.15s;
+      }
+
+      .place-selection select:focus {
+        outline: none;
+        border-color: var(--accent);
+      }
+
+      .add-vibe-btn {
+        width: 100%;
+        padding: 14px;
+        background: var(--accent);
+        color: #000;
+        border: none;
+        border-radius: 10px;
+        font-family: var(--ff-display);
+        font-weight: 700;
+        font-size: 13px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: opacity 0.15s, transform 0.1s;
+        box-shadow: 0 0 24px var(--accent-glow);
+        margin-top: 2px;
+      }
+
+      .add-vibe-btn:hover { opacity: 0.88; }
+      .add-vibe-btn:active { transform: scale(0.98); }
+
+      /* ===== RESPONSIVE ===== */
+      @media (min-width: 768px) {
+        .main-content {
+          padding: 32px 40px;
+          gap: 32px;
+        }
+
+        .color-wheel {
+          width: 280px;
+          height: 280px;
+        }
+
+        .place-selection,
+        .selected-vibe {
+          max-width: 400px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .color-wheel {
+          width: 200px;
+          height: 200px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+
+      <!-- Top Bar -->
+      <header class="top-bar">
+        <button class="hamburger-menu" aria-label="Open navigation menu" aria-expanded="false">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+        <h1 class="logo">Whut's the Vibe?</h1>
+        <div class="top-bar-end" aria-hidden="true"></div>
+      </header>
+
+      <!-- Side Navigation -->
+      <nav class="side-nav" aria-label="Main navigation">
+        <ul>
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="vibes.html" class="nav-link">Vibes</a></li>
+          <li><a href="add-vibe.html" class="nav-link active" aria-current="page">Add Vibe</a></li>
+          <li><a href="vibe-check.html" class="nav-link">Vibe Check</a></li>
+          <li><a href="favourites.html" class="nav-link">Favourites</a></li>
+        </ul>
+      </nav>
+
+      <!-- Overlay -->
+      <div class="overlay"></div>
+
+      <!-- Main Content -->
+      <main class="main-content" aria-label="Add new vibe form">
+        <p class="page-title">Add New Vibe</p>
+
+        <!-- Color Wheel -->
+        <div class="color-wheel-container">
+          <div class="color-wheel" id="colorWheel">
+            <!-- Inner segments (light) -->
+            <div class="segment segment-inner red-inner"    data-vibe="big-party"     data-name="Big Party"     data-description="Ready to celebrate and have fun"></div>
+            <div class="segment segment-inner orange-inner" data-vibe="serious-topics" data-name="Serious Topics" data-description="Time for meaningful conversations"></div>
+            <div class="segment segment-inner yellow-inner" data-vibe="play"           data-name="Play"           data-description="Let's have some lighthearted fun"></div>
+            <div class="segment segment-inner green-inner"  data-vibe="hectic-nature"  data-name="Hectic Nature"  data-description="Feeling energetic and active"></div>
+            <div class="segment segment-inner blue-inner"   data-vibe="anti-stress"   data-name="Anti-stress"   data-description="Need to relax and unwind"></div>
+            <div class="segment segment-inner purple-inner" data-vibe="eat-drink"     data-name="Eat and Drink" data-description="Time for good food and drinks"></div>
+            <!-- Outer segments (dark) -->
+            <div class="segment segment-outer red-outer"    data-vibe="big-party"     data-name="Big Party"     data-description="Ready to celebrate and have fun"></div>
+            <div class="segment segment-outer orange-outer" data-vibe="serious-topics" data-name="Serious Topics" data-description="Time for meaningful conversations"></div>
+            <div class="segment segment-outer yellow-outer" data-vibe="play"           data-name="Play"           data-description="Let's have some lighthearted fun"></div>
+            <div class="segment segment-outer green-outer"  data-vibe="hectic-nature"  data-name="Hectic Nature"  data-description="Feeling energetic and active"></div>
+            <div class="segment segment-outer blue-outer"   data-vibe="anti-stress"   data-name="Anti-stress"   data-description="Need to relax and unwind"></div>
+            <div class="segment segment-outer purple-outer" data-vibe="eat-drink"     data-name="Eat and Drink" data-description="Time for good food and drinks"></div>
+          </div>
+          <div class="vibe-tooltip" id="vibeTooltip"></div>
+        </div>
+
+        <!-- Place Selection -->
+        <div class="place-selection">
+          <label for="place-select">Choose a place</label>
+          <select id="place-select" name="place">
+            <option value="">Select a place</option>
+            <option value="central-park-cafe">Central Park Cafe</option>
+            <option value="river-view-restaurant">River View Restaurant</option>
+            <option value="downtown-art-gallery">Downtown Art Gallery</option>
+            <option value="sunset-beach-bar">Sunset Beach Bar</option>
+            <option value="mountain-view-lookout">Mountain View Lookout</option>
+            <option value="cozy-bookstore">Cozy Corner Bookstore</option>
+            <option value="rooftop-lounge">Rooftop Lounge</option>
+            <option value="local-gym">Local Fitness Center</option>
+            <option value="community-park">Community Park</option>
+            <option value="music-venue">Live Music Venue</option>
+          </select>
+          <button class="add-vibe-btn" id="addVibeBtn">Add Vibe</button>
+        </div>
+      </main>
+
+      <!-- Bottom Dock -->
+      <div class="bottom-dock" aria-label="Action buttons">
+        <button class="action-btn" data-action="cancel" aria-label="Cancel">
+          <span class="icon">✖</span>
+          <span class="btn-label">Cancel</span>
+        </button>
+        <button class="action-btn selected" data-action="save" aria-label="Save vibe">
+          <span class="icon">➕</span>
+          <span class="btn-label">Save</span>
+        </button>
+        <button class="action-btn" data-action="photo" aria-label="Add photo">
+          <span class="icon">📷</span>
+          <span class="btn-label">Photo</span>
+        </button>
+      </div>
+
+    </div>
+
+    <script>
+      // Add Vibe Page JavaScript
+      (function () {
+        "use strict";
+
+        // DOM Elements
+        const hamburgerMenu = document.querySelector(".hamburger-menu");
+        const sideNav = document.querySelector(".side-nav");
+        const overlay = document.querySelector(".overlay");
+        const colorWheel = document.getElementById("colorWheel");
+        const wheelSegments = document.querySelectorAll(".segment");
+        const vibeTooltip = document.getElementById("vibeTooltip");
+        const placeSelect = document.getElementById("place-select");
+        const addVibeBtn = document.getElementById("addVibeBtn");
+        const actionButtons = document.querySelectorAll(".action-btn");
+
+        let currentPlace = null;
+
+        // Initialize app
+        function init() {
+          setupEventListeners();
+          updateActiveNavLink();
+        }
+
+        // Setup all event listeners
+        function setupEventListeners() {
+          // Hamburger menu
+          if (hamburgerMenu) {
+            hamburgerMenu.addEventListener("click", toggleSideNav);
+          }
+
+          // Overlay
+          if (overlay) {
+            overlay.addEventListener("click", closeSideNav);
+          }
+
+          // Wheel segments
+          wheelSegments.forEach((segment) => {
+            segment.addEventListener("click", handleSegmentClick);
+            segment.addEventListener("mouseenter", showTooltip);
+            segment.addEventListener("mouseleave", hideTooltip);
+            segment.addEventListener("touchstart", showTooltip, { passive: true });
+            segment.addEventListener("touchend", hideTooltip, { passive: true });
+          });
+
+          // Place selection
+          placeSelect.addEventListener("change", handlePlaceChange);
+
+          // Add vibe button
+          if (addVibeBtn) {
+            addVibeBtn.addEventListener("click", handleAddVibeClick);
+          }
+
+          // Action buttons
+          actionButtons.forEach((button) => {
+            button.addEventListener("click", handleActionButtonClick);
+          });
+
+          // Escape key
+          document.addEventListener("keydown", handleGlobalKeydown);
+        }
+
+        // Toggle side navigation
+        function toggleSideNav() {
+          const isActive = sideNav.classList.contains("active");
+          if (isActive) {
+            closeSideNav();
+          } else {
+            openSideNav();
+          }
+        }
+
+        // Open side navigation
+        function openSideNav() {
+          sideNav.classList.add("active");
+          overlay.classList.add("active");
+          hamburgerMenu.classList.add("active");
+          hamburgerMenu.setAttribute("aria-expanded", "true");
+          document.body.style.overflow = "hidden";
+        }
+
+        // Close side navigation
+        function closeSideNav() {
+          sideNav.classList.remove("active");
+          overlay.classList.remove("active");
+          hamburgerMenu.classList.remove("active");
+          hamburgerMenu.setAttribute("aria-expanded", "false");
+          document.body.style.overflow = "";
+        }
+
+        // Handle segment clicks
+        function handleSegmentClick(e) {
+          const segment = e.currentTarget;
+          const name = segment.getAttribute("data-name");
+          const description = segment.getAttribute("data-description");
+
+          console.log(`Selected vibe: ${name} - ${description}`);
+          showNotification(`Selected: ${name}`);
+        }
+
+        // Show tooltip
+        function showTooltip(e) {
+          const segment = e.currentTarget;
+          const name = segment.getAttribute("data-name");
+          vibeTooltip.textContent = name;
+          vibeTooltip.classList.add("show");
+        }
+
+        // Hide tooltip
+        function hideTooltip() {
+          vibeTooltip.classList.remove("show");
+        }
+
+        // Handle place selection change
+        function handlePlaceChange(e) {
+          currentPlace = e.target.value;
+          console.log(`Selected place: ${currentPlace}`);
+        }
+
+        // Handle add vibe button click
+        function handleAddVibeClick() {
+          if (currentPlace) {
+            console.log(`Adding vibe at place: ${currentPlace}`);
+            showNotification(
+              `Vibe added at ${placeSelect.options[placeSelect.selectedIndex].text}!`
+            );
+            setTimeout(() => {
+              window.location.href = "index.html";
+            }, 1500);
+          } else {
+            showNotification("Please select a place first!");
+          }
+        }
+
+        // Handle action button clicks
+        function handleActionButtonClick(e) {
+          const button = e.currentTarget;
+          const action = button.getAttribute("data-action");
+          handleAction(action, button);
+        }
+
+        // Handle specific actions
+        function handleAction(action, button) {
+          switch (action) {
+            case "save":
+              if (!addVibeBtn.disabled) {
+                addVibe();
+              }
+              break;
+            case "cancel":
+              if (window.history.length > 1) {
+                window.history.back();
+              } else {
+                window.location.href = "index.html";
+              }
+              break;
+            case "photo":
+              showNotification("Photo feature coming soon!");
+              break;
+            default:
+              console.log(`Action ${action} not implemented yet`);
+          }
+        }
+
+        // Add vibe
+        function addVibe() {
+          const vibeData = {
+            vibe: currentVibe,
+            place: currentPlace,
+            timestamp: new Date().toISOString(),
+          };
+          console.log("Adding vibe:", vibeData);
+          showNotification("Vibe added successfully!");
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 1500);
+        }
+
+        // Update active navigation link
+        function updateActiveNavLink() {
+          const currentPage =
+            window.location.pathname.split("/").pop() || "index.html";
+          const navLinks = document.querySelectorAll(".nav-link");
+
+          navLinks.forEach((link) => {
+            link.classList.remove("active");
+            link.removeAttribute("aria-current");
+
+            const linkHref = link.getAttribute("href");
+            if (
+              linkHref === currentPage ||
+              (currentPage === "add-vibe.html" && linkHref === "add-vibe.html")
+            ) {
+              link.classList.add("active");
+              link.setAttribute("aria-current", "page");
+            }
+          });
+        }
+
+        // Handle global keydown events
+        function handleGlobalKeydown(e) {
+          if (e.key === "Escape" && sideNav.classList.contains("active")) {
+            closeSideNav();
+          }
+        }
+
+        // Show notification
+        function showNotification(message) {
+          const notification = document.createElement("div");
+          notification.className = "notification";
+          notification.textContent = message;
+          notification.setAttribute("role", "alert");
+
+          Object.assign(notification.style, {
+            position: "fixed",
+            top: "50%",
+            left: "50%",
+            transform: "translate(-50%, -50%)",
+            backgroundColor: "#000",
+            color: "#fff",
+            padding: "12px 24px",
+            borderRadius: "8px",
+            zIndex: "10000",
+            fontSize: "14px",
+            textAlign: "center",
+            opacity: "0",
+            transition: "opacity 0.3s ease",
+          });
+
+          document.body.appendChild(notification);
+
+          setTimeout(() => {
+            notification.style.opacity = "1";
+          }, 10);
+
+          setTimeout(() => {
+            notification.style.opacity = "0";
+            setTimeout(() => {
+              if (notification.parentNode) {
+                notification.parentNode.removeChild(notification);
+              }
+            }, 300);
+          }, 3000);
+        }
+
+        // Initialize app when DOM is ready
+        if (document.readyState === "loading") {
+          document.addEventListener("DOMContentLoaded", init);
+        } else {
+          init();
+        }
+      })();
+    </script>
+  </body>
+</html>
