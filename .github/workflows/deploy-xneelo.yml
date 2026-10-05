@@ -42,11 +42,8 @@ jobs:
 
       - name: Mirror site to ${{ vars.XNEELO_DIR }}
         run: |
-          lftp -u "$USER_","$PASS" -e "
-            set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=yes'
-            set net:max-retries 2
-            mirror -R --delete --verbose $DRY \
-              --exclude-glob .git* --exclude-glob .github/ --exclude-glob .vscode/ \
-              --exclude-glob .DS_Store --exclude-glob '_backup-*/' --exclude-glob '*.md' --exclude-glob LICENSE \
-              . '$DIR'
-            bye" "sftp://$HOST"
+          CMDS="set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=yes'; set net:max-retries 2"
+          CMDS="$CMDS; mirror -R --delete --verbose $DRY"
+          for x in '.git*' '.github/' '.vscode/' '.DS_Store' '_backup-*/' '*.md' 'LICENSE'; do CMDS="$CMDS --exclude-glob '$x'"; done
+          CMDS="$CMDS . '$DIR'; bye"
+          lftp -u "$USER_","$PASS" -e "$CMDS" "sftp://$HOST"
