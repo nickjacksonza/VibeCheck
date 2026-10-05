@@ -40,10 +40,14 @@ jobs:
         run: |
           lftp -u "$USER_","$PASS" -e "set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=yes'; set net:max-retries 2; cls -1; bye" "sftp://$HOST"
 
+      - name: Stage publishable files (no .git, backups, docs, dotfiles)
+        run: |
+          rsync -a --exclude='.*' --exclude='_backup-*' --exclude='*.md' --exclude='LICENSE' \
+            --exclude='*.pem' --exclude='*.key' --exclude='node_modules' ./ "$RUNNER_TEMP/site/"
+          echo "Staged files:"; (cd "$RUNNER_TEMP/site" && find . -type f | sort)
+          ! find "$RUNNER_TEMP/site" -name '.*' | grep -q . || { echo "::error::dotfile leaked into staging"; exit 1; }
+
       - name: Mirror site to ${{ vars.XNEELO_DIR }}
         run: |
-          CMDS="set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=yes'; set net:max-retries 2"
-          CMDS="$CMDS; mirror -R --delete --verbose $DRY"
-          for x in '.git*' '.github/' '.vscode/' '.DS_Store' '_backup-*/' '*.md' 'LICENSE'; do CMDS="$CMDS --exclude-glob '$x'"; done
-          CMDS="$CMDS . '$DIR'; bye"
-          lftp -u "$USER_","$PASS" -e "$CMDS" "sftp://$HOST"
+          cd "$RUNNER_TEMP/site"
+          lftp -u "$USER_","$PASS" -e "set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=yes'; set net:max-retries 2; mirror -R --delete --verbose $DRY . '$DIR'; bye" "sftp://$HOST"
