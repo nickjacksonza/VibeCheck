@@ -1,0 +1,52 @@
+name: Deploy to Xneelo (SFTP)
+
+# PRs: dry-run only (shows what would change, uploads nothing).
+# Push to main / manual run: real deploy of the static site to the host.
+on:
+  pull_request:
+    paths-ignore: ['**.md']
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-xneelo
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      HOST: ${{ vars.XNEELO_HOST }}
+      USER_: ${{ vars.XNEELO_USER }}
+      DIR: ${{ vars.XNEELO_DIR }}
+      DRY: ${{ github.event_name == 'pull_request' && '--dry-run' || '' }}
+      PASS: ${{ secrets.XNEELO_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install lftp and pin host key
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq lftp
+          [ -n "$PASS" ] || { echo "::error::XNEELO_PASSWORD secret is not set for this repo"; exit 1; }
+          mkdir -p ~/.ssh && printf '%s\n' '${{ vars.XNEELO_HOSTKEY }}' > ~/.ssh/known_hosts
+
+      - name: Show remote root (layout check)
+        run: |
+          lftp -u "$USER_","$PASS" -e "set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=yes'; set net:max-retries 2; cls -1; bye" "sftp://$HOST"
+
+      - name: Mirror site to ${{ vars.XNEELO_DIR }}
+        run: |
+          lftp -u "$USER_","$PASS" -e "
+            set sftp:connect-program 'ssh -a -x -o StrictHostKeyChecking=yes'
+            set net:max-retries 2
+            mirror -R --delete --verbose $DRY \
+              --exclude-glob .git* --exclude-glob .github/ --exclude-glob .vscode/ \
+              --exclude-glob .DS_Store --exclude-glob '_backup-*/' --exclude-glob '*.md' --exclude-glob LICENSE \
+              . '$DIR'
+            bye" "sftp://$HOST"
